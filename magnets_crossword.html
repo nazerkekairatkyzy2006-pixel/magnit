@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тұрақты магниттер — Кроссворд</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Noto+Sans+KR:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #111827;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --correct: #00ff88;
+    --wrong: #ff3366;
+    --text: #e8f4f8;
+    --muted: #5a7a8a;
+    --cell: #1a2535;
+    --cell-border: #2a3f55;
+    --cell-active: #1e3a5f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px;
+    background-image: 
+      radial-gradient(ellipse at 20% 20%, rgba(0,229,255,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(255,107,53,0.07) 0%, transparent 60%);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .subtitle {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    font-weight: 900;
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+
+  .grade-tag {
+    display: inline-block;
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.3);
+    color: var(--accent);
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+  }
+
+  .main-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* GRID */
+  .grid-wrap {
+    flex: 0 0 auto;
+  }
+
+  #crossword-grid {
+    display: inline-grid;
+    border: 1px solid var(--cell-border);
+    border-radius: 4px;
+    overflow: hidden;
+    gap: 1px;
+    background: var(--cell-border);
+  }
+
+  .cell {
+    width: 38px;
+    height: 38px;
+    background: var(--bg);
+    position: relative;
+  }
+
+  .cell.active {
+    background: var(--cell);
+  }
+
+  .cell .num {
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    font-size: 9px;
+    color: var(--accent);
+    font-family: 'Unbounded', sans-serif;
+    line-height: 1;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .cell input {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    font-size: 1rem;
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: uppercase;
+    cursor: pointer;
+    caret-color: var(--accent);
+    padding-top: 10px;
+  }
+
+  .cell.correct input { color: var(--correct); }
+  .cell.wrong input { color: var(--wrong); }
+  .cell.highlighted { background: var(--cell-active); }
+  .cell.selected input { background: transparent; }
+  .cell.selected { background: #1e3a5f; }
+
+  /* CLUES */
+  .clues-wrap {
+    flex: 1 1 280px;
+    max-width: 380px;
+  }
+
+  .clues-section {
+    background: var(--panel);
+    border: 1px solid var(--cell-border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+
+  .clues-section h3 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .clues-section h3::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--accent2), transparent);
+  }
+
+  .clue-item {
+    display: flex;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s;
+    padding-left: 6px;
+  }
+
+  .clue-item:hover { background: rgba(0,229,255,0.05); }
+  .clue-item.active-clue { background: rgba(0,229,255,0.1); }
+
+  .clue-num {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.75rem;
+    color: var(--accent);
+    min-width: 22px;
+    padding-top: 1px;
+  }
+
+  .clue-text {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: #b0c8d4;
+  }
+
+  /* BUTTONS */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  button {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    padding: 10px 18px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-check {
+    background: linear-gradient(135deg, var(--accent), #0096aa);
+    color: #000;
+  }
+
+  .btn-check:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+  .btn-reveal {
+    background: rgba(255,107,53,0.15);
+    color: var(--accent2);
+    border: 1px solid rgba(255,107,53,0.4);
+  }
+
+  .btn-reveal:hover { background: rgba(255,107,53,0.25); }
+
+  .btn-reset {
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .btn-reset:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+  #result-msg {
+    margin-top: 12px;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    min-height: 20px;
+    color: var(--correct);
+  }
+
+  @media (max-width: 600px) {
+    .cell { width: 30px; height: 30px; }
+    .cell input { font-size: 0.85rem; padding-top: 8px; }
+    .cell .num { font-size: 7px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="subtitle">Физика • Қалыптастырушы бағалау</p>
+  <h1>ТҰРАҚТЫ МАГНИТТЕР</h1>
+  <span class="grade-tag">8-сынып</span>
+</header>
+
+<div class="main-layout">
+  <div class="grid-wrap">
+    <div id="crossword-grid"></div>
+  </div>
+
+  <div class="clues-wrap">
+    <div class="clues-section">
+      <h3>→ Көлденең</h3>
+      <div id="across-clues"></div>
+    </div>
+    <div class="clues-section">
+      <h3>↓ Тік</h3>
+      <div id="down-clues"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-check" onclick="checkAnswers()">Тексеру</button>
+      <button class="btn-reveal" onclick="revealAnswers()">Жауабын көрсет</button>
+      <button class="btn-reset" onclick="resetGrid()">Тазалау</button>
+    </div>
+    <div id="result-msg"></div>
+  </div>
+</div>
+
+<script>
+// ─── CROSSWORD DATA ─────────────────────────────────────────────────────────
+// Grid: 12 rows × 12 cols (0-indexed)
+// Words and their placements
+
+const WORDS = [
+  // ACROSS
+  {
+    id: 1, dir: 'across', row: 0, col: 0, answer: 'МАГНИТ',
+    clue: '1. Темірді тартатын табиғи немесе жасанды зат'
+  },
+  {
+    id: 4, dir: 'across', row: 2, col: 1, answer: 'ПОЛЮС',
+    clue: '4. Магниттің ең күшті бөлігі (Солтүстік және Оңтүстік)'
+  },
+  {
+    id: 6, dir: 'across', row: 4, col: 0, answer: 'ТАРТУ',
+    clue: '6. Қарама-қарсы полюстер арасындағы өзара әсер'
+  },
+  {
+    id: 7, dir: 'across', row: 6, col: 2, answer: 'ӨРІС',
+    clue: '7. Магниттің айналасындағы күш әсер ететін кеңістік'
+  },
+  {
+    id: 9, dir: 'across', row: 8, col: 0, answer: 'КОМПАС',
+    clue: '9. Тұрақты магнит негізіндегі бағдарлау құралы'
+  },
+  {
+    id: 11, dir: 'across', row: 10, col: 1, answer: 'ТЕМІР',
+    clue: '11. Магнит тартатын негізгі металл'
+  },
+  // DOWN
+  {
+    id: 2, dir: 'down', row: 0, col: 3, answer: 'МАГНИТТІК',
+    clue: '2. ...өріс — магнит тудыратын күш кеңістігі'
+  },
+  {
+    id: 3, dir: 'down', row: 0, col: 5, answer: 'НИКЕЛЬ',
+    clue: '3. Магнит тарта алатын металл, химиялық белгісі Ni'
+  },
+  {
+    id: 5, dir: 'down', row: 2, col: 7, answer: 'ИТЕРУ',
+    clue: '5. Бірдей полюстер арасындағы өзара әсер'
+  },
+  {
+    id: 8, dir: 'down', row: 4, col: 9, answer: 'ФЕРРО',
+    clue: '8. ...магнетизм — темір тәрізді материалдардың қасиеті'
+  },
+  {
+    id: 10, dir: 'down', row: 6, col: 5, answer: 'БОЛАТ',
+    clue: '10. Тұрақты магнит жасалатын қатты материал'
+  },
+];
+
+// Build grid layout
+const ROWS = 13, COLS = 12;
+const grid = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+
+// Place letters
+WORDS.forEach(w => {
+  for (let i = 0; i < w.answer.length; i++) {
+    const r = w.dir === 'across' ? w.row : w.row + i;
+    const c = w.dir === 'across' ? w.col + i : w.col;
+    if (!grid[r]) grid[r] = Array(COLS).fill(null);
+    grid[r][c] = { letter: w.answer[i], num: null };
+  }
+});
+
+// Place numbers
+WORDS.forEach(w => {
+  const r = w.row, c = w.col;
+  if (grid[r] && grid[r][c]) {
+    grid[r][c].num = w.id;
+  }
+});
+
+// ─── RENDER GRID ─────────────────────────────────────────────────────────────
+const gridEl = document.getElementById('crossword-grid');
+
+// Find bounds
+let minRow = ROWS, maxRow = 0, minCol = COLS, maxCol = 0;
+for (let r = 0; r < ROWS; r++) {
+  for (let c = 0; c < COLS; c++) {
+    if (grid[r] && grid[r][c]) {
+      minRow = Math.min(minRow, r);
+      maxRow = Math.max(maxRow, r);
+      minCol = Math.min(minCol, c);
+      maxCol = Math.max(maxCol, c);
+    }
+  }
+}
+
+const visRows = maxRow - minRow + 1;
+const visCols = maxCol - minCol + 1;
+gridEl.style.gridTemplateColumns = `repeat(${visCols}, auto)`;
+gridEl.style.gridTemplateRows = `repeat(${visRows}, auto)`;
+
+const inputMap = {}; // "r,c" -> input element
+
+for (let r = minRow; r <= maxRow; r++) {
+  for (let c = minCol; c <= maxCol; c++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    const key = `${r},${c}`;
+
+    if (grid[r] && grid[r][c]) {
+      cell.classList.add('active');
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+
+      if (grid[r][c].num) {
+        const numEl = document.createElement('span');
+        numEl.className = 'num';
+        numEl.textContent = grid[r][c].num;
+        cell.appendChild(numEl);
+      }
+
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.maxLength = 1;
+      inp.dataset.row = r;
+      inp.dataset.col = c;
+      inp.autocomplete = 'off';
+      inp.autocorrect = 'off';
+      inp.spellcheck = false;
+      cell.appendChild(inp);
+      inputMap[key] = inp;
+
+      inp.addEventListener('input', (e) => {
+        const val = e.target.value.toUpperCase().replace(/[^А-ЯҒҚҢӨҰҮІЁa-zA-ZА-Яа-я]/g, '');
+        inp.value = val ? val[val.length-1] : '';
+        if (inp.value) moveNext(r, c);
+      });
+
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !inp.value) movePrev(r, c);
+        if (e.key === 'ArrowRight') { e.preventDefault(); focusCell(r, c+1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); focusCell(r, c-1); }
+        if (e.key === 'ArrowDown') { e.preventDefault(); focusCell(r+1, c); }
+        if (e.key === 'ArrowUp') { e.preventDefault(); focusCell(r-1, c); }
+      });
+
+      inp.addEventListener('focus', () => {
+        clearHighlight();
+        cell.classList.add('selected');
+        highlightWord(r, c);
+      });
+    }
+
+    gridEl.appendChild(cell);
+  }
+}
+
+function focusCell(r, c) {
+  const inp = inputMap[`${r},${c}`];
+  if (inp) inp.focus();
+}
+
+function moveNext(r, c) {
+  // try right first, then down
+  if (inputMap[`${r},${c+1}`]) { focusCell(r, c+1); return; }
+  if (inputMap[`${r+1},${c}`]) { focusCell(r+1, c); }
+}
+
+function movePrev(r, c) {
+  if (inputMap[`${r},${c-1}`]) { focusCell(r, c-1); return; }
+  if (inputMap[`${r-1},${c}`]) { focusCell(r-1, c); }
+}
+
+function clearHighlight() {
+  document.querySelectorAll('.cell').forEach(c => {
+    c.classList.remove('highlighted', 'selected');
+  });
+}
+
+function highlightWord(r, c) {
+  WORDS.forEach(w => {
+    for (let i = 0; i < w.answer.length; i++) {
+      const wr = w.dir === 'across' ? w.row : w.row + i;
+      const wc = w.dir === 'across' ? w.col + i : w.col;
+      if (wr === r && wc === c) {
+        // highlight whole word
+        for (let j = 0; j < w.answer.length; j++) {
+          const hr = w.dir === 'across' ? w.row : w.row + j;
+          const hc = w.dir === 'across' ? w.col + j : w.col;
+          const cellEl = getCellEl(hr, hc);
+          if (cellEl) cellEl.classList.add('highlighted');
+        }
+      }
+    }
+  });
+}
+
+function getCellEl(r, c) {
+  return document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+}
+
+// ─── CLUES ───────────────────────────────────────────────────────────────────
+const acrossDiv = document.getElementById('across-clues');
+const downDiv = document.getElementById('down-clues');
+
+WORDS.filter(w => w.dir === 'across').forEach(w => {
+  const div = document.createElement('div');
+  div.className = 'clue-item';
+  div.dataset.id = w.id;
+  div.innerHTML = `<span class="clue-num">${w.id}</span><span class="clue-text">${w.clue.replace(/^\d+\.\s*/,'')}</span>`;
+  div.addEventListener('click', () => focusCell(w.row, w.col));
+  acrossDiv.appendChild(div);
+});
+
+WORDS.filter(w => w.dir === 'down').forEach(w => {
+  const div = document.createElement('div');
+  div.className = 'clue-item';
+  div.dataset.id = w.id;
+  div.innerHTML = `<span class="clue-num">${w.id}</span><span class="clue-text">${w.clue.replace(/^\d+\.\s*/,'')}</span>`;
+  div.addEventListener('click', () => focusCell(w.row, w.col));
+  downDiv.appendChild(div);
+});
+
+// ─── CHECK / REVEAL / RESET ──────────────────────────────────────────────────
+function checkAnswers() {
+  let total = 0, correct = 0;
+  WORDS.forEach(w => {
+    for (let i = 0; i < w.answer.length; i++) {
+      const r = w.dir === 'across' ? w.row : w.row + i;
+      const c = w.dir === 'across' ? w.col + i : w.col;
+      const inp = inputMap[`${r},${c}`];
+      const cellEl = getCellEl(r, c);
+      if (!inp) continue;
+      total++;
+      if (inp.value.toUpperCase() === w.answer[i]) {
+        correct++;
+        cellEl.classList.remove('wrong');
+        cellEl.classList.add('correct');
+      } else if (inp.value) {
+        cellEl.classList.remove('correct');
+        cellEl.classList.add('wrong');
+      } else {
+        cellEl.classList.remove('correct', 'wrong');
+      }
+    }
+  });
+  const msg = document.getElementById('result-msg');
+  if (correct === total) {
+    msg.style.color = 'var(--correct)';
+    msg.textContent = '✓ Барлық жауап дұрыс! Керемет!';
+  } else {
+    msg.style.color = 'var(--accent2)';
+    msg.textContent = `${correct} / ${total} дұрыс`;
+  }
+}
+
+function revealAnswers() {
+  WORDS.forEach(w => {
+    for (let i = 0; i < w.answer.length; i++) {
+      const r = w.dir === 'across' ? w.row : w.row + i;
+      const c = w.dir === 'across' ? w.col + i : w.col;
+      const inp = inputMap[`${r},${c}`];
+      const cellEl = getCellEl(r, c);
+      if (inp) {
+        inp.value = w.answer[i];
+        if (cellEl) { cellEl.classList.add('correct'); cellEl.classList.remove('wrong'); }
+      }
+    }
+  });
+  document.getElementById('result-msg').style.color = 'var(--muted)';
+  document.getElementById('result-msg').textContent = 'Жауаптар көрсетілді';
+}
+
+function resetGrid() {
+  Object.values(inputMap).forEach(inp => inp.value = '');
+  document.querySelectorAll('.cell').forEach(c => c.classList.remove('correct','wrong'));
+  document.getElementById('result-msg').textContent = '';
+}
+</script>
+</body>
+</html>
